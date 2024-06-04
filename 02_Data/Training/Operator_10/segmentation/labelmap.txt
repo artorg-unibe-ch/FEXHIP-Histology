@@ -1,0 +1,5 @@
+# label:color_rgb:parts:actions
+Cement Line:255,0,0::
+Haversian Canal:184,61,245::
+Osteocyte:0,255,0::
+background:0,0,0::
