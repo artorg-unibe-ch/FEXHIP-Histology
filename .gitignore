@@ -24,5 +24,6 @@
 *.tex
 
 # Ignore directories
+06_Problems/
 07_Article/
 08_ISBM/

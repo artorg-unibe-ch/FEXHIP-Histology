@@ -1,0 +1,16 @@
+name: FEXHIS
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - ipykernel
+  - pandas
+  - openpyxl
+  - matplotlib
+  - scikit-image
+  - scikit-learn
+  - keras
+  - cudatoolkit=11.8.0
+  - statsmodels
+  - cuda-nvcc=11.3.58
+prefix: /home/mathieu/anaconda3/envs/FEXHIS
