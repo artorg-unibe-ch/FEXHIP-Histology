@@ -71,6 +71,7 @@ dependencies:
       - packaging==24.0
       - pandas==2.2.2
       - parso==0.8.4
+      - patchify
       - pexpect==4.9.0
       - pillow==10.3.0
       - platformdirs==4.2.2
@@ -80,6 +81,7 @@ dependencies:
       - ptyprocess==0.7.0
       - pure-eval==0.2.2
       - pygments==2.18.0
+      - pylatex
       - pyparsing==3.1.2
       - python-dateutil==2.9.0.post0
       - pytz==2024.1
@@ -89,6 +91,7 @@ dependencies:
       - scikit-image==0.23.2
       - scikit-learn==1.5.0
       - scipy==1.13.1
+      - SimpleITK-SimpleElastix
       - six==1.16.0
       - stack-data==0.6.3
       - tensorboard==2.16.2

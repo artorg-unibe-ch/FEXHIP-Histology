@@ -28,7 +28,7 @@ import pandas as pd
 from pathlib import Path
 from sklearn import metrics
 import matplotlib.pyplot as plt
-from keras.models import load_model
+from keras.models import load_model # type: ignore
 from skimage.morphology import disk
 from sklearn.model_selection import KFold
 from keras import layers, Model, callbacks
@@ -164,7 +164,7 @@ def Main():
     Unet.compile(optimizer='adam',
                  loss='binary_focal_crossentropy',
                  metrics=['accuracy'],
-                 loss_weights=cWeights,
+                 loss_weights=[cWeights],
                  weighted_metrics=['accuracy']
                  )
     print(Unet.summary())

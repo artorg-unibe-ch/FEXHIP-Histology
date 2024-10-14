@@ -20,6 +20,7 @@ Description = """
 #%% Imports
 # Modules import
 
+import os
 import argparse
 import numpy as np
 import pandas as pd
@@ -133,7 +134,7 @@ def PlotDistribution(Data:list, Variable='') -> None:
     plt.show()
 
     return
-def DataStats(Images:list, Plots=False) -> (np.array, np.array):
+def DataStats(Images:list, Plots=False) -> tuple:
 
     """
     Compute average and standard deviation of each canal
