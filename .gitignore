@@ -16,10 +16,6 @@
 # Ignore manual segmentations
 02_Data/03_ManualSegmentation/*
 
-# Ignore large models
-*.joblib
-*.hdf5
-
 # Ignore tex files
 *.tex
 

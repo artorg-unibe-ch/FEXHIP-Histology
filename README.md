@@ -6,6 +6,7 @@ Linked to the article "Automatic Segmentation of Cortical Bone Microstructure: A
 - Install Anaconda
 - Create virtual environment with `conda env create -f filename.yml`. "filename.yml" is "Linux_Requirements.yml" if working on a linux station or "WSL_Requirements.yml" if working with Windows subsystem for linux.
 - Activate the virtual environment with conda activate FEXHIS
+
 - Test installation by running "Test.ipynb" JupyterLab Notebook
 
 ## Overview
