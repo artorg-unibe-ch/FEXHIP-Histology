@@ -409,7 +409,7 @@ class Training():
     def GetData(self, Path:Path):
 
         """
-        To write
+        Collect training data at the given path
         """
 
         Time.Process(1,'Get training data')
@@ -432,7 +432,7 @@ class Training():
     def SetWeights(self, Labels:np.array):
 
         """
-        To write
+        Set weights according to operator scores and perform one-hot encoding of labels
         """
 
         sWeights = Labels / 255

@@ -233,7 +233,7 @@ def Main():
 
     # Fit random forest classifier with all training data and save it
     RFc.fit(SubFeatures, SubLabels.ravel()+1, sample_weight=SubWeights)
-    joblib.dump(RFc, str(ResultsDir / 'RandomForest.joblib'))
+    joblib.dump(RFc, str(ResultsDir / 'RandomForest.joblib'), compress=1)
     RFc = joblib.load(str(ResultsDir / 'RandomForest.joblib'))
 
     # Look at random test image
