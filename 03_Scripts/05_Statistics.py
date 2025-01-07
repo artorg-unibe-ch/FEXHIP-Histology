@@ -26,12 +26,12 @@ import numpy as np
 import pandas as pd
 from skimage import io
 from pathlib import Path
-from Utils import Time, CVAT
+from Utils import Time, CVAT #type:ignore
 import matplotlib.pyplot as plt
 from matplotlib.cm import winter, jet
 import statsmodels.formula.api as smf
 from matplotlib.colors import ListedColormap
-from scipy.stats.distributions import norm, t, chi2
+from scipy.stats.distributions import norm, t, chi2, f
 from scipy.stats import pearsonr, shapiro, kstest, ttest_rel, ttest_ind
 
 
@@ -508,199 +508,199 @@ def PlotOLS(X:np.array, Y:np.array, Labels=None, Alpha=0.95, FName=None) -> None
 
     return
 
-def PlotMixedLM(Data:pd.DataFrame, LME:smf.mixedlm, Model:smf.mixedlm, FigName=None,
-                Xlabel='X', Ylabel='Y', Alpha_CI=0.95) -> None:
+# def PlotMixedLM(Data:pd.DataFrame, LME:smf.mixedlm, Model:smf.mixedlm, FigName=None,    #type:ignore
+#                 Xlabel='X', Ylabel='Y', Alpha_CI=0.95) -> None:
     
-    """
-    Function used to plot mixed linear model results
-    Plotting based on: https://www.azandisresearch.com/2022/12/31/visualize-mixed-effect-regressions-in-r-with-ggplot2/
-    As bootstrap is expensive for CI band computation, compute
-    CI bands based on FOX 2017
+#     """
+#     Function used to plot mixed linear model results
+#     Plotting based on: https://www.azandisresearch.com/2022/12/31/visualize-mixed-effect-regressions-in-r-with-ggplot2/
+#     As bootstrap is expensive for CI band computation, compute
+#     CI bands based on FOX 2017
 
-    Only implemented for 2 levels LME with nested random intercepts
-    """
+#     Only implemented for 2 levels LME with nested random intercepts
+#     """
 
-    # Compute conditional residuals
-    Data['CR'] = LME.params[0] + Data['X']*LME.params[1] + LME.resid
+#     # Compute conditional residuals
+#     Data['CR'] = LME.params[0] + Data['X']*LME.params[1] + LME.resid
 
-    # Create X values for confidence interval lines
-    Min = Data['X'].min()
-    Max = Data['X'].max()
-    Range = np.linspace(Min, Max, len(Data))
+#     # Create X values for confidence interval lines
+#     Min = Data['X'].min()
+#     Max = Data['X'].max()
+#     Range = np.linspace(Min, Max, len(Data))
 
-    # Get corresponding fitted values and CI interval
-    Y_Fit = LME.params[0] + Range * LME.params[1]
-    Alpha = t.interval(Alpha_CI, len(Data) - len(LME.fe_params) - 1)
+#     # Get corresponding fitted values and CI interval
+#     Y_Fit = LME.params[0] + Range * LME.params[1]
+#     Alpha = t.interval(Alpha_CI, len(Data) - len(LME.fe_params) - 1)
 
-    # Residual sum of squares
-    RSS = np.sum(LME.resid ** 2)
-    TSS = np.sum((Data['Y'] - Data['Y'].mean()) ** 2)
-    RegSS = TSS - RSS
-    R2 = RegSS / TSS
+#     # Residual sum of squares
+#     RSS = np.sum(LME.resid ** 2)
+#     TSS = np.sum((Data['Y'] - Data['Y'].mean()) ** 2)
+#     RegSS = TSS - RSS
+#     R2 = RegSS / TSS
 
-    # Standard error of the estimate
-    SE = np.sqrt(RSS / LME.df_resid)
+#     # Standard error of the estimate
+#     SE = np.sqrt(RSS / LME.df_resid)
 
-    # Compute corresponding CI lines
-    C = np.matrix(LME.normalized_cov_params)
-    X = np.matrix([np.ones(len(Data)),np.linspace(Min, Max, len(Data))]).T
+#     # Compute corresponding CI lines
+#     C = np.matrix(LME.normalized_cov_params)
+#     X = np.matrix([np.ones(len(Data)),np.linspace(Min, Max, len(Data))]).T
     
-    if C.shape[0] > len(LME.fe_params):
-        C = C[:len(LME.fe_params),:len(LME.fe_params)]
+#     if C.shape[0] > len(LME.fe_params):
+#         C = C[:len(LME.fe_params),:len(LME.fe_params)]
 
-    B_0 = np.sqrt(np.diag(np.abs(X * C * X.T)))
+#     B_0 = np.sqrt(np.diag(np.abs(X * C * X.T)))
 
-    CI_Line_u = Y_Fit + Alpha[0] * SE * B_0
-    CI_Line_o = Y_Fit + Alpha[1] * SE * B_0
+#     CI_Line_u = Y_Fit + Alpha[0] * SE * B_0
+#     CI_Line_o = Y_Fit + Alpha[1] * SE * B_0
 
-    # Different markers for different anatomical sites
-    Markers = ['o','x','^']
+#     # Different markers for different anatomical sites
+#     Markers = ['o','x','^']
 
-    # Plot and save results
-    Figure, Axis = plt.subplots(1,1)
-    Axis.fill_between(Range, CI_Line_o, CI_Line_u, color=(0, 0, 0), alpha=0.1)
-    Sites = []
-    for i, (S, Df) in enumerate(Data.groupby(by='Site')):
-        Sites.append(S)
-        Colors, Donors = [], []
-        for Donor, df in Df.groupby(by='Donor'):
-            Color = winter(Donor / max(Data['Donor'].values))
-            Axis.plot(df['X'], df['Y'], c=Color, linestyle='none',
-                        marker=Markers[i], fillstyle='none')
-            Colors.append(Color)
-            Donors.append(Donor)
+#     # Plot and save results
+#     Figure, Axis = plt.subplots(1,1)
+#     Axis.fill_between(Range, CI_Line_o, CI_Line_u, color=(0, 0, 0), alpha=0.1)
+#     Sites = []
+#     for i, (S, Df) in enumerate(Data.groupby(by='Site')):
+#         Sites.append(S)
+#         Colors, Donors = [], []
+#         for Donor, df in Df.groupby(by='Donor'):
+#             Color = winter(Donor / max(Data['Donor'].values))
+#             Axis.plot(df['X'], df['Y'], c=Color, linestyle='none',
+#                         marker=Markers[i], fillstyle='none')
+#             Colors.append(Color)
+#             Donors.append(Donor)
 
-    Axis.plot(Range, Y_Fit, color=(1,0,0))
+#     Axis.plot(Range, Y_Fit, color=(1,0,0))
 
-    # Create legend
-    L1 = []
-    for M in Markers:
-        P, = plt.plot([],color=(0,0,0), marker=M, linestyle='none', fillstyle='none')
-        L1.append(P)
+#     # Create legend
+#     L1 = []
+#     for M in Markers:
+#         P, = plt.plot([],color=(0,0,0), marker=M, linestyle='none', fillstyle='none')
+#         L1.append(P)
 
-    Axis.set_ylabel(Ylabel)
-    Axis.set_xlabel(Xlabel)
-    plt.legend(L1, Sites, loc='upper center', bbox_to_anchor=(0.5,1.1),ncol=3)
+#     Axis.set_ylabel(Ylabel)
+#     Axis.set_xlabel(Xlabel)
+#     plt.legend(L1, Sites, loc='upper center', bbox_to_anchor=(0.5,1.1),ncol=3)
     
-    # Add annotations
-    Intercept = LME.params[0]
-    Slope = LME.params[1]
-    N = len(Data)
-    # if Slope > 0:
+#     # Add annotations
+#     Intercept = LME.params[0]
+#     Slope = LME.params[1]
+#     N = len(Data)
+#     # if Slope > 0:
 
-    # Number of observations
-    YPos = 0.925
-    Axis.annotate(r'$N$  : ' + str(N), xy=(0.025, YPos), xycoords='axes fraction')
+#     # Number of observations
+#     YPos = 0.925
+#     Axis.annotate(r'$N$  : ' + str(N), xy=(0.025, YPos), xycoords='axes fraction')
 
-    # Pearson's correlation coefficient
-    YPos -= 0.075
-    Axis.annotate(r'$R^2$ : ' + format(round(R2, 2), '.2f'), xy=(0.025, YPos), xycoords='axes fraction')
+#     # Pearson's correlation coefficient
+#     YPos -= 0.075
+#     Axis.annotate(r'$R^2$ : ' + format(round(R2, 2), '.2f'), xy=(0.025, YPos), xycoords='axes fraction')
 
-    # Standard error of the estimate
-    YPos -= 0.075
-    Axis.annotate(r'$SE$ : ' + format(round(SE, 2), '.2f'), xy=(0.025, YPos), xycoords='axes fraction')
+#     # Standard error of the estimate
+#     YPos -= 0.075
+#     Axis.annotate(r'$SE$ : ' + format(round(SE, 2), '.2f'), xy=(0.025, YPos), xycoords='axes fraction')
     
-    # Intercept coeffecient and corresponding confidence interval
-    YPos = 0.025
-    Round = 4 - str(Intercept).find('.')
-    rIntercept = np.round(Intercept, Round)
-    CIMargin = Alpha[1] *  np.sqrt(RSS / (N - 2) * C[0,0])
-    CI = np.round([Intercept - CIMargin, Intercept + CIMargin], Round)
-    if Round <= 0:
-        rIntercept = int(rIntercept)
-        CI = [int(v) for v in CI]
-    Text = r'Intercept : ' + str(rIntercept) + ' (' + str(CI[0]) + ',' + str(CI[1]) + ')'
-    Axis.annotate(Text, xy=(0.5, YPos), xycoords='axes fraction')
-    YPos += 0.075
+#     # Intercept coeffecient and corresponding confidence interval
+#     YPos = 0.025
+#     Round = 4 - str(Intercept).find('.')
+#     rIntercept = np.round(Intercept, Round)
+#     CIMargin = Alpha[1] *  np.sqrt(RSS / (N - 2) * C[0,0])
+#     CI = np.round([Intercept - CIMargin, Intercept + CIMargin], Round)
+#     if Round <= 0:
+#         rIntercept = int(rIntercept)
+#         CI = [int(v) for v in CI]
+#     Text = r'Intercept : ' + str(rIntercept) + ' (' + str(CI[0]) + ',' + str(CI[1]) + ')'
+#     Axis.annotate(Text, xy=(0.5, YPos), xycoords='axes fraction')
+#     YPos += 0.075
 
-    # Slope coeffecient and corresponding confidence interval
-    Round = 3 - str(Slope).find('.')
-    rSlope = np.round(Slope, Round)
-    CIMargin = Alpha[1] * np.sqrt(RSS / (N - 2) * C[1,1])
-    CI = np.round([Slope - CIMargin, Slope + CIMargin], Round)
-    if Round <= 0:
-        rSlope = int(rSlope)
-        CI = [int(v) for v in CI]
-    Text = r'Slope : ' + str(rSlope) + ' (' + str(CI[0]) + ',' + str(CI[1]) + ')'
-    Axis.annotate(Text, xy=(0.5, YPos), xycoords='axes fraction')
+#     # Slope coeffecient and corresponding confidence interval
+#     Round = 3 - str(Slope).find('.')
+#     rSlope = np.round(Slope, Round)
+#     CIMargin = Alpha[1] * np.sqrt(RSS / (N - 2) * C[1,1])
+#     CI = np.round([Slope - CIMargin, Slope + CIMargin], Round)
+#     if Round <= 0:
+#         rSlope = int(rSlope)
+#         CI = [int(v) for v in CI]
+#     Text = r'Slope : ' + str(rSlope) + ' (' + str(CI[0]) + ',' + str(CI[1]) + ')'
+#     Axis.annotate(Text, xy=(0.5, YPos), xycoords='axes fraction')
 
-    # Group variability (BLUP)
-    RE = Fit.random_effects
+#     # Group variability (BLUP)
+#     RE = Fit.random_effects
 
-    # Multiply each BLUP by the random effects design matrix for one group
-    # Only take first value as only random intercept
-    REx = [np.dot(Model.exog_re_li[j][0], RE[k]) for (j, k) in enumerate(Model.group_labels)]
+#     # Multiply each BLUP by the random effects design matrix for one group
+#     # Only take first value as only random intercept
+#     REx = [np.dot(Model.exog_re_li[j][0], RE[k]) for (j, k) in enumerate(Model.group_labels)]
 
-    # Add annotation
-    YPos += 0.075
-    Std = np.std(REx, ddof=1)
-    Round = 3 - str(Std).find('.')
-    rStd = np.round(Std, Round)
-    Text = r'Donor $\sigma^2$ : ' + str(rStd) + '$^2$'
-    Axis.annotate(Text, xy=(0.5, YPos), xycoords='axes fraction')
+#     # Add annotation
+#     YPos += 0.075
+#     Std = np.std(REx, ddof=1)
+#     Round = 3 - str(Std).find('.')
+#     rStd = np.round(Std, Round)
+#     Text = r'Donor $\sigma^2$ : ' + str(rStd) + '$^2$'
+#     Axis.annotate(Text, xy=(0.5, YPos), xycoords='axes fraction')
 
 
 
-    # elif Slope < 0:
+#     # elif Slope < 0:
 
-    #     # Number of observations
-    #     YPos = 0.025
-    #     Axis.annotate(r'$N$  : ' + str(N), xy=(0.025, YPos), xycoords='axes fraction')
+#     #     # Number of observations
+#     #     YPos = 0.025
+#     #     Axis.annotate(r'$N$  : ' + str(N), xy=(0.025, YPos), xycoords='axes fraction')
 
-    #     # Pearson's correlation coefficient
-    #     YPos += 0.075
-    #     Axis.annotate(r'$R^2$ : ' + format(round(R2, 2), '.2f'), xy=(0.025, YPos), xycoords='axes fraction')
+#     #     # Pearson's correlation coefficient
+#     #     YPos += 0.075
+#     #     Axis.annotate(r'$R^2$ : ' + format(round(R2, 2), '.2f'), xy=(0.025, YPos), xycoords='axes fraction')
 
-    #     # Standard error of the estimate
-    #     YPos += 0.075
-    #     Axis.annotate(r'$SE$ : ' + format(round(SE, 2), '.2f'), xy=(0.025, YPos), xycoords='axes fraction')
+#     #     # Standard error of the estimate
+#     #     YPos += 0.075
+#     #     Axis.annotate(r'$SE$ : ' + format(round(SE, 2), '.2f'), xy=(0.025, YPos), xycoords='axes fraction')
 
-    #     # Intercept coeffecient and corresponding confidence interval
-    #     YPos = 0.925
-    #     Round = 3 - str(Intercept).find('.')
-    #     rIntercept = np.round(Intercept, Round)
-    #     CIMargin = Alpha[1] * np.sqrt(RSS / (N - 2) * C[0,0])
-    #     CI = np.round([Intercept - CIMargin, Intercept + CIMargin],Round)
-    #     if Round <= 0:
-    #         rIntercept = int(rIntercept)
-    #         CI = [int(v) for v in CI]
-    #     Text = r'Intercept : ' + str(rIntercept) + ' (' + str(CI[0]) + ',' + str(CI[1]) + ')'
-    #     Axis.annotate(Text, xy=(0.5, YPos), xycoords='axes fraction')
-    #     YPos -= 0.075
+#     #     # Intercept coeffecient and corresponding confidence interval
+#     #     YPos = 0.925
+#     #     Round = 3 - str(Intercept).find('.')
+#     #     rIntercept = np.round(Intercept, Round)
+#     #     CIMargin = Alpha[1] * np.sqrt(RSS / (N - 2) * C[0,0])
+#     #     CI = np.round([Intercept - CIMargin, Intercept + CIMargin],Round)
+#     #     if Round <= 0:
+#     #         rIntercept = int(rIntercept)
+#     #         CI = [int(v) for v in CI]
+#     #     Text = r'Intercept : ' + str(rIntercept) + ' (' + str(CI[0]) + ',' + str(CI[1]) + ')'
+#     #     Axis.annotate(Text, xy=(0.5, YPos), xycoords='axes fraction')
+#     #     YPos -= 0.075
 
-    #     # Slope coeffecient and corresponding confidence interval
-    #     Round = 3 - str(Slope).find('.')
-    #     rSlope = np.round(Slope, Round)
-    #     CIMargin = Alpha[1] * np.sqrt(RSS / (N - 2) * C[1,1])
-    #     CI = np.round([Slope - CIMargin, Slope + CIMargin],Round)
-    #     if Round <= 0:
-    #         rSlope = int(rSlope)
-    #         CI = [int(v) for v in CI]
-    #     Text = r'Slope : ' + str(rSlope) + ' (' + str(CI[0]) + ',' + str(CI[1]) + ')'
-    #     Axis.annotate(Text, xy=(0.5, YPos), xycoords='axes fraction')
+#     #     # Slope coeffecient and corresponding confidence interval
+#     #     Round = 3 - str(Slope).find('.')
+#     #     rSlope = np.round(Slope, Round)
+#     #     CIMargin = Alpha[1] * np.sqrt(RSS / (N - 2) * C[1,1])
+#     #     CI = np.round([Slope - CIMargin, Slope + CIMargin],Round)
+#     #     if Round <= 0:
+#     #         rSlope = int(rSlope)
+#     #         CI = [int(v) for v in CI]
+#     #     Text = r'Slope : ' + str(rSlope) + ' (' + str(CI[0]) + ',' + str(CI[1]) + ')'
+#     #     Axis.annotate(Text, xy=(0.5, YPos), xycoords='axes fraction')
     
-    #     # Group variability (BLUP)
-    #     RE = Fit.random_effects
+#     #     # Group variability (BLUP)
+#     #     RE = Fit.random_effects
 
-    #     # Multiply each BLUP by the random effects design matrix for one group
-    #     # Only take first value as only random intercept
-    #     REx = [np.dot(LME.exog_re_li[j][0], RE[k]) for (j, k) in enumerate(LME.group_labels)]
+#     #     # Multiply each BLUP by the random effects design matrix for one group
+#     #     # Only take first value as only random intercept
+#     #     REx = [np.dot(LME.exog_re_li[j][0], RE[k]) for (j, k) in enumerate(LME.group_labels)]
 
-    #     # Add annotation
-    #     YPos -= 0.075
-    #     Std = np.std(REx, ddof=1)
-    #     Round = 3 - str(Std).find('.')
-    #     rStd = np.round(Std, Round)
-    #     Text = r'Donor $\sigma^2$ : ' + str(rStd) + '$^2$'
-    #     Axis.annotate(Text, xy=(0.5, YPos), xycoords='axes fraction')
+#     #     # Add annotation
+#     #     YPos -= 0.075
+#     #     Std = np.std(REx, ddof=1)
+#     #     Round = 3 - str(Std).find('.')
+#     #     rStd = np.round(Std, Round)
+#     #     Text = r'Donor $\sigma^2$ : ' + str(rStd) + '$^2$'
+#     #     Axis.annotate(Text, xy=(0.5, YPos), xycoords='axes fraction')
 
-    plt.subplots_adjust(left=0.15, bottom=0.15)
+#     plt.subplots_adjust(left=0.15, bottom=0.15)
 
-    if FName:
-        plt.savefig(FName, dpi=196)
-    plt.show(Figure)
+#     if FName:
+#         plt.savefig(FName, dpi=196)
+#     plt.show(Figure)
 
-    return
+#     return
 
 def PlotOLSDonors(Data:pd.DataFrame, Labels=None, Alpha=0.95, FName=None) -> None:
     
@@ -1066,6 +1066,209 @@ def PlotDistribution(Data:pd.DataFrame, Labels=['',''], XLim=[], FName=None) -> 
 
     return [np.array([D50.mean(), D50.std()]), np.array([D95.mean(), D95.std()])]
 
+def ANOVA(DataTest:pd.DataFrame, Alpha=0.05, Labels=['', 'Y'], YLim=[], FigName='') -> pd.DataFrame:
+
+    # Get columns
+    Columns = DataTest.columns
+    ANOVA_Table = pd.DataFrame(index=['Treatment','Error'],
+                               columns=['SS','DF','MS'])
+
+    # Get values (remove nans)
+    isNA = [DataTest[C].isna() for C in Columns]
+
+    # Compute means
+    y = [DataTest[C][~isNA[i]].values for i, C in enumerate(Columns)]
+    y_i = [np.mean(i) for i in y]
+    y_ = np.mean(y_i)
+
+    # Compute sum of square
+    SST = 0
+    for i in range(len(Columns)):
+        SST += len(y[i]) * (y_i[i] - y_)**2
+
+    SS = sum([sum((i - y_)**2) for i in y])
+    SSE = SS - SST
+
+    ANOVA_Table.loc['Treatment','SS'] = SST
+    ANOVA_Table.loc['Error','SS'] = SSE
+
+    # Degrees of freedom
+    DFT = len(Columns) - 1
+    DFE = sum([len(i) for i in y]) - len(Columns)
+
+    ANOVA_Table.loc['Treatment','DF'] = DFT
+    ANOVA_Table.loc['Error','DF'] = DFE
+
+    # Compute F-statistic
+    MST = SST / DFT
+    MSE = SSE / DFE
+    F = MST / MSE
+    pvalue = 1 - f.cdf(F,DFT,DFE)
+
+    ANOVA_Table.loc['Treatment','MS'] = MST
+    ANOVA_Table.loc['Error','MS'] = MSE
+
+    # Print ANOVA table
+    print('\nANOVA Table')
+    print(ANOVA_Table)
+    print(f'\nF-statistic      : {F}')
+    print(f'p-value          : {pvalue}')
+    if pvalue > Alpha:
+        print('p-value > alpha  : Treatment is not significant')
+    else:
+        print('p-value <= alpha : Treatment is significant')
+
+    # Build confidence interval table
+    CI_Table = pd.DataFrame()
+    Index = 0
+    for i in range(len(Columns)):
+        for j in range(len(Columns)):
+            if j>i:
+
+                # Store variable tested
+                CI_Table.loc[Index,'Variables'] = f'{Columns[i]} - {Columns[j]}'
+
+                # Difference in means
+                y_d = y_i[j] - y_i[i]
+
+                # Compute CI interval
+                t_value = np.array(t.interval(1-Alpha,DFE))
+                CI = y_d + t_value * np.sqrt(MSE * (1/len(y[i]) + 1/len(y[j])))
+
+                # Store results and increment
+                CI_Table.loc[Index,f'{int((1-Alpha)*100)}% CI Low'] = CI[0]
+                CI_Table.loc[Index,f'{int((1-Alpha)*100)}% CI Up'] = CI[1]
+                Index += 1
+
+    # Boxplot of the results
+    Width = 2.5 + len(y)
+    Figure, Axis = plt.subplots(1,1, dpi=100, figsize=(Width,4.5))
+    for i, Array in enumerate(y):
+
+        # Create random positions
+        Array = np.sort(Array)
+        Norm = norm.pdf(np.linspace(-3,3,len(Array)), scale=1.5)
+        Norm = Norm / max(Norm)
+        RandPos = np.random.normal(0,0.03,len(Array)) * Norm + i
+        Axis.plot(RandPos - RandPos.mean() + i, Array, linestyle='none',
+                  marker='o',fillstyle='none', color=(1,0,0), ms=5)
+        
+        # Plot
+        Axis.boxplot(Array, vert=True, widths=0.35,
+                    showmeans=True,meanline=True,
+                    showfliers=False, positions=[i],
+                    capprops=dict(color=(0,0,0)),
+                    boxprops=dict(color=(0,0,0)),
+                    whiskerprops=dict(color=(0,0,0),linestyle='--'),
+                    medianprops=dict(color=(0,1,0)),
+                    meanprops=dict(color=(0,0,1)))
+
+    # Add data for legend
+    Axis.plot([],linestyle='none',marker='o',fillstyle='none', color=(1,0,0), label='Data')
+    Axis.plot([],color=(0,0,1), label='Mean', linestyle='--')
+    Axis.plot([],color=(0,1,0), label='Median')
+    
+    # Set ticks and axes label
+    Axis.set_xlabel(Labels[0])
+    Axis.set_ylabel(Labels[1])
+    Axis.set_xticks(np.arange(len(Columns)))
+    Axis.set_xticklabels([C.replace(' ','\n') for C in Columns], rotation=0)
+
+    # Annotate with ANOVA values
+    CI_Cols = CI_Table.columns
+    if len(YLim) == 2:
+        Shift = (YLim[1] - YLim[0]) / 8
+    else:
+        Shift = (max(i.max() for i in y) - min(i.min() for i in y)) / 5
+    Indices = {}
+    for c in range(len(Columns)):
+        Indices[c] = [[],[]]
+    for i, Row in CI_Table.iterrows():
+
+        # Get data values
+        V1, V2 = Row['Variables'].split(' - ')
+        iC, jC = list(Columns).index(V1), list(Columns).index(V2)
+        yi, yj = y[iC], y[jC]
+
+        # Plot line
+        YLine = 1.05 * max(yi.max(), yj.max())
+
+        if jC - iC == 1 and YLine not in Indices[iC][0] and YLine not in Indices[jC][1]:
+            if len(Indices[jC][1]) > 0:
+                if min(Indices[jC][1]) - YLine < Shift:
+                    YLine = min(Indices[jC][1]) + Shift
+            Indices[iC][0].append(YLine)
+            Indices[jC][1].append(YLine)
+
+        else:
+            if len(Indices[iC][0]) > 0:
+                if YLine < max(Indices[iC][0]):
+                    YLine = max(Indices[iC][0])
+                if YLine - max(Indices[iC][0]) < Shift:
+                    YLine = max(Indices[iC][0]) + Shift
+            if len(Indices[jC][1]) > 0:
+                if YLine < max(Indices[jC][1]):
+                    YLine = max(Indices[jC][1])
+                if YLine - max(Indices[jC][1]) < Shift:
+                    YLine = max(Indices[jC][1]) + Shift
+
+            while YLine in Indices[iC][0] or YLine in Indices[jC][1]:
+                YLine += Shift
+
+            if YLine not in Indices[iC][0]:
+                Indices[iC][0].append(YLine)
+            if YLine not in Indices[jC][1]:
+                Indices[jC][1].append(YLine)
+
+
+        Plot = Axis.plot([iC+0.05, jC-0.05], [YLine, YLine], color=(0,0,0),
+                         marker='|', linewidth=0.5)
+        MarkerSize = Plot[0].get_markersize()
+        
+        # Mark significance level
+        if pvalue < 0.001:
+            Text = 'p-value < 0.001'
+        elif pvalue < 0.01:
+            Text = 'p-value < 0.01' 
+        elif pvalue < 0.05:
+            Text = 'p-value < 0.05'
+        else:
+            Text = 'p-value > 0.05'
+        Axis.annotate(Text, xy=[(len(Columns)-1)/2, 1], ha='center')
+
+        # Write confidence interveal
+        CI1 = round(Row[CI_Cols[1]],1)
+        CI2 = round(Row[CI_Cols[2]],1)
+        Text = f'CI ({CI1},{CI2})'
+
+        Axis.annotate(Text, xy=[(iC + jC)/2, YLine], ha='center',
+                        xytext=(0, 1.2*MarkerSize), textcoords='offset points',)
+        
+        # Store max line y position
+        if i == 0:
+            Max = YLine*1.05
+        else:
+            Max = max([Max, YLine + MarkerSize * 0.25])
+
+
+    # If custom limits
+    if len(YLim) == 2:
+            Axis.set_ylim(YLim)
+    else:
+        Min = min([min(i)for i in y]) - MarkerSize * 0.125
+        Axis.set_ylim([Min, Max])
+
+    # Add legend
+    plt.legend(loc='upper center', ncol=3, bbox_to_anchor=(0.5, 1.125))
+    plt.subplots_adjust(left=0.25, right=0.75)
+
+    # Save figure if name given
+    if len(FigName) > 0:
+        plt.savefig(FigName, bbox_inches='tight', pad_inches=0.02, dpi=196)
+    plt.show(Figure)
+
+    return CI_Table
+
 #%% Main
 # Main part
 
@@ -1313,10 +1516,10 @@ def Main(Alpha=0.05):
     FName = ResDir / 'Distances_HCCL'
     HCCL_D50, HCCL_D95 = PlotDistribution(HCCL_Distribution, Labels, FName=FName)
 
-    BoxPlot([D50HC, D50OS, D50CL], Labels=['50% of pixels', 'Distance from Haversian canal ($\mu m$)'],
-            SetsLabels=['Haversian\ncanal', 'Osteocytes','Cement\nlines'])
-    BoxPlot([D95HC, D95OS, D95CL], Labels=['95% of pixels', 'Distance from Haversian canal ($\mu m$)'],
-            SetsLabels=['Haversian\ncanal', 'Osteocytes','Cement\nlines'])
+    # BoxPlot([D50HC, D50OS, D50CL], Labels=['50% of pixels', 'Distance from Haversian canal ($\mu m$)'],
+    #         SetsLabels=['Haversian\ncanal', 'Osteocytes','Cement\nlines'])
+    # BoxPlot([D95HC, D95OS, D95CL], Labels=['95% of pixels', 'Distance from Haversian canal ($\mu m$)'],
+    #         SetsLabels=['Haversian\ncanal', 'Osteocytes','Cement\nlines'])
 
 
 
@@ -1364,6 +1567,28 @@ def Main(Alpha=0.05):
             SetsLabels=['Left','Right'], Ttest='Ind', YLim=[0,20],
             FigName=FName)
     
+    # Perform ANOVAs for laterality
+    Values = Means[('Haversian canals','Density (%)')]
+    FName = str(ResDir / 'Side_HC')
+    ANODATA = pd.DataFrame()
+    ANODATA['Left'] = Values.loc[:,'Left']
+    ANODATA['Right'] = Values.loc[:,'Right']
+    ANOVA(ANODATA, Labels=['', r'H$_{\rho}$ (%)'], YLim=[0,22], FigName=FName)
+
+    Values = Means[('Osteocytes','Density (%)')]
+    FName = str(ResDir / 'Side_OS')
+    ANODATA = pd.DataFrame()
+    ANODATA['Left'] = Values.loc[:,'Left']
+    ANODATA['Right'] = Values.loc[:,'Right']
+    ANOVA(ANODATA, Labels=['', r'O$_{\rho}$ (%)'], YLim=[0,22], FigName=FName)
+
+    Values = Means[('Cement lines','Density (%)')]
+    FName = str(ResDir / 'Side_CL')
+    ANODATA = pd.DataFrame()
+    ANODATA['Left'] = Values.loc[:,'Left']
+    ANODATA['Right'] = Values.loc[:,'Right']
+    ANOVA(ANODATA, Labels=['', r'C$_{\rho}$ (%)'], YLim=[0,22], FigName=FName)
+
     # Draw boxplots for sex
     xValues = Means[('Data','Sex (-)')].values
     yValues = Means[('Haversian canals','Density (%)')]
@@ -1392,6 +1617,29 @@ def Main(Alpha=0.05):
             SetsLabels=['M','F'], Ttest='Ind', YLim=[0,20],
             FigName=FName)
     
+    # Perform ANOVAs for sex
+    Sex = Means[('Data','Sex (-)')].values
+    Values = Means[('Haversian canals','Density (%)')]
+    FName = str(ResDir / 'Sex_HC')
+    ANODATA = pd.DataFrame()
+    ANODATA['M'] = Values[Sex == 0]
+    ANODATA['F'] = Values[Sex == 1]
+    ANOVA(ANODATA, Labels=['', r'H$_{\rho}$ (%)'], YLim=[0,22], FigName=FName)
+
+    Values = Means[('Osteocytes','Density (%)')]
+    FName = str(ResDir / 'Sex_OS')
+    ANODATA = pd.DataFrame()
+    ANODATA['M'] = Values[Sex == 0]
+    ANODATA['F'] = Values[Sex == 1]
+    ANOVA(ANODATA, Labels=['', r'O$_{\rho}$ (%)'], YLim=[0,22], FigName=FName)
+
+    Values = Means[('Cement lines','Density (%)')]
+    FName = str(ResDir / 'Sex_CL')
+    ANODATA = pd.DataFrame()
+    ANODATA['M'] = Values[Sex == 0]
+    ANODATA['F'] = Values[Sex == 1]
+    ANOVA(ANODATA, Labels=['', r'C$_{\rho}$ (%)'], YLim=[0,22], FigName=FName)
+    
     # Draw boxplots for different anatomical sites
     Values = Means[('Haversian canals','Density (%)')]
     ArrayList = [Values.loc[:,:,'Diaphysis'],
@@ -1419,6 +1667,31 @@ def Main(Alpha=0.05):
     BoxPlot(ArrayList, Labels=['', r'C$_{\rho}$ (%)'], YLim=[0,20],
             SetsLabels=['Diaphysis','Neck\nInferior','Neck\nSuperior'], Ttest='Ind',
             FigName=FName)
+
+    # Perform ANOVAs for anatomical sites
+    Values = Means[('Haversian canals','Density (%)')]
+    FName = str(ResDir / 'Site_HC')
+    ANODATA = pd.DataFrame()
+    ANODATA['Diaphysis'] = Values.loc[:,:,'Diaphysis']
+    ANODATA['Neck Inferior'] = Values.loc[:,:,'Neck Inferior']
+    ANODATA['Neck Superior'] = Values.loc[:,:,'Neck Superior']
+    ANOVA(ANODATA, Labels=['', r'H$_{\rho}$ (%)'], YLim=[0,23.5], FigName=FName)
+
+    Values = Means[('Osteocytes','Density (%)')]
+    FName = str(ResDir / 'Site_OS')
+    ANODATA = pd.DataFrame()
+    ANODATA['Diaphysis'] = Values.loc[:,:,'Diaphysis']
+    ANODATA['Neck Inferior'] = Values.loc[:,:,'Neck Inferior']
+    ANODATA['Neck Superior'] = Values.loc[:,:,'Neck Superior']
+    ANOVA(ANODATA, Labels=['', r'O$_{\rho}$ (%)'], YLim=[0,23.5], FigName=FName)
+
+    Values = Means[('Cement lines','Density (%)')]
+    FName = str(ResDir / 'Site_CL')
+    ANODATA = pd.DataFrame()
+    ANODATA['Diaphysis'] = Values.loc[:,:,'Diaphysis']
+    ANODATA['Neck Inferior'] = Values.loc[:,:,'Neck Inferior']
+    ANODATA['Neck Superior'] = Values.loc[:,:,'Neck Superior']
+    ANOVA(ANODATA, Labels=['', r'C$_{\rho}$ (%)'], YLim=[0,23.5], FigName=FName)
 
     # Draw boxplots for different anatomical sites variability
     Values = Std[('Haversian canals','Density (%)')]
@@ -1470,25 +1743,25 @@ def Main(Alpha=0.05):
     FName = ResDir / 'OLS_BVTV_OS'
     PlotOLS(Xc, Yc, Labels=['BV/TV (-)', 'Osteocytes Density (mm$^{-2}$)'], FName=FName)
 
-    # Mixed-LM
-    X = 100 - LMEData[('Haversian canals','Density (%)')].values.astype('float')
-    Y = np.array(LMEData[('Osteocytes','Number (-)')],float) / (0.5**2 * X/100)
-    DataFrame = pd.DataFrame(np.vstack([X,Y]).T,columns=['X','Y'])
-    DataFrame['Donor'] = [int(D) for D in LMEData.index.get_level_values('Donor')]
-    DataFrame['Site'] = LMEData.index.get_level_values('Site')
-    DataFrame['Age'] = LMEData[('Data', 'Age (year)')].values
+    # # Mixed-LM
+    # X = 100 - LMEData[('Haversian canals','Density (%)')].values.astype('float')
+    # Y = np.array(LMEData[('Osteocytes','Number (-)')],float) / (0.5**2 * X/100)
+    # DataFrame = pd.DataFrame(np.vstack([X,Y]).T,columns=['X','Y'])
+    # DataFrame['Donor'] = [int(D) for D in LMEData.index.get_level_values('Donor')]
+    # DataFrame['Site'] = LMEData.index.get_level_values('Site')
+    # DataFrame['Age'] = LMEData[('Data', 'Age (year)')].values
 
-    LME = smf.mixedlm('Y ~ X - 1',
-                    data=DataFrame,
-                    groups=DataFrame['Donor'],
-                    re_formula='0 + Donor',
-                    )
-    Fit = LME.fit(reml=True, method='lbfgs')
-    print(Fit.summary())
+    # LME = smf.mixedlm('Y ~ X - 1',
+    #                 data=DataFrame,
+    #                 groups=DataFrame['Donor'],
+    #                 re_formula='0 + Donor',
+    #                 )
+    # Fit = LME.fit(reml=True, method='lbfgs')
+    # print(Fit.summary())
 
-    FName = ResDir / 'LME_HC_OS'
-    PlotMixedLM(DataFrame, Fit, LME, Xlabel='BA/TA (%)',
-                Ylabel='Osteocytes Density (mm$^{-2}$)', FigName=FName)
+    # FName = ResDir / 'LME_HC_OS'
+    # PlotMixedLM(DataFrame, Fit, LME, Xlabel='BA/TA (%)',
+    #             Ylabel='Osteocytes Density (mm$^{-2}$)', FigName=FName)
 
     # DataFrame.index = Data.index
     # ShowQuality(DataFrame, ['Y'], Dirs, NValues=7, FigSave='')
